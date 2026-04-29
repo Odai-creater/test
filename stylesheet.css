@@ -269,3 +269,37 @@ footer {
     width: 100%;
   }
 }
+
+/* Back to Top Button */
+#back-to-top {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  background-color: #5dca88;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+#back-to-top.visible {
+  opacity: 0.8;
+  visibility: visible;
+}
+
+#back-to-top:hover {
+  opacity: 1;
+  transform: translateY(-3px);
+}
+
+#back-to-top:active {
+  transform: translateY(0);
+}
