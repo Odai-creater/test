@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自動車注文管理システム (OMS)</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+  <!-- Login Screen -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-container">
+      <div class="login-logo">
+        <i class="fas fa-car"></i>
+        <h1>自動車注文管理システム</h1>
+        <p>Order Management System</p>
+      </div>
+      <form id="login-form" class="login-form">
+        <div class="form-group">
+          <label for="login-username">ユーザー名</label>
+          <input type="text" id="login-username" placeholder="ユーザー名を入力" required>
+        </div>
+        <div class="form-group">
+          <label for="login-role">ロール</label>
+          <select id="login-role" required>
+            <option value="">ロールを選択してください</option>
+            <option value="admin">管理者</option>
+            <option value="sales">営業担当者</option>
+            <option value="inventory">インベントリマネージャー</option>
+            <option value="supplier">サプライヤー</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">ログイン</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app" class="app hidden">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <i class="fas fa-car"></i>
+        <span>OMS</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="dashboard">
+          <i class="fas fa-tachometer-alt"></i><span>ダッシュボード</span>
+        </a>
+        <a href="#" class="nav-item" data-page="orders" data-roles="admin,sales,inventory,supplier">
+          <i class="fas fa-file-invoice"></i><span>注文管理</span>
+        </a>
+        <a href="#" class="nav-item" data-page="products" data-roles="admin,inventory,supplier">
+          <i class="fas fa-car-side"></i><span>製品管理</span>
+        </a>
+        <a href="#" class="nav-item" data-page="customers" data-roles="admin,sales">
+          <i class="fas fa-users"></i><span>顧客管理</span>
+        </a>
+        <a href="#" class="nav-item" data-page="suppliers" data-roles="admin,inventory">
+          <i class="fas fa-truck"></i><span>サプライヤー管理</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <i class="fas fa-user-circle"></i>
+          <div>
+            <span id="user-display-name"></span>
+            <small id="user-display-role"></small>
+          </div>
+        </div>
+        <button id="logout-btn" class="btn btn-sm btn-outline"><i class="fas fa-sign-out-alt"></i></button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <button id="sidebar-toggle" class="sidebar-toggle">
+          <i class="fas fa-bars"></i>
+        </button>
+        <h2 id="page-title">ダッシュボード</h2>
+        <div class="top-bar-right">
+          <span id="current-date"></span>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <div id="page-content" class="page-content">
+        <!-- Dashboard Page -->
+        <div id="page-dashboard" class="page active">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon bg-blue"><i class="fas fa-file-invoice"></i></div>
+              <div class="stat-info">
+                <h3 id="stat-orders">0</h3>
+                <p>総注文数</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon bg-green"><i class="fas fa-check-circle"></i></div>
+              <div class="stat-info">
+                <h3 id="stat-confirmed">0</h3>
+                <p>確認済み</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon bg-orange"><i class="fas fa-clock"></i></div>
+              <div class="stat-info">
+                <h3 id="stat-pending">0</h3>
+                <p>保留中</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon bg-purple"><i class="fas fa-car-side"></i></div>
+              <div class="stat-info">
+                <h3 id="stat-products">0</h3>
+                <p>製品数</p>
+              </div>
+            </div>
+          </div>
+          <div class="dashboard-grid">
+            <div class="card">
+              <div class="card-header">
+                <h3>最近の注文</h3>
+              </div>
+              <div class="card-body">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>注文ID</th>
+                      <th>顧客</th>
+                      <th>日付</th>
+                      <th>ステータス</th>
+                      <th>合計金額</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recent-orders-body"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3>在庫アラート</h3>
+              </div>
+              <div class="card-body">
+                <div id="stock-alerts"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Orders Page -->
+        <div id="page-orders" class="page">
+          <div class="page-actions">
+            <div class="search-bar">
+              <i class="fas fa-search"></i>
+              <input type="text" id="order-search" placeholder="注文を検索...">
+            </div>
+            <div class="filter-group">
+              <select id="order-status-filter">
+                <option value="">すべてのステータス</option>
+                <option value="保留中">保留中</option>
+                <option value="確認済み">確認済み</option>
+                <option value="出荷済み">出荷済み</option>
+                <option value="配送済み">配送済み</option>
+                <option value="承認済み">承認済み</option>
+              </select>
+            </div>
+            <button id="create-order-btn" class="btn btn-primary" data-roles="admin,sales">
+              <i class="fas fa-plus"></i> 新規注文
+            </button>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>注文ID</th>
+                    <th>顧客</th>
+                    <th>注文日</th>
+                    <th>ステータス</th>
+                    <th>支払い方法</th>
+                    <th>配送方法</th>
+                    <th>合計金額</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="orders-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products Page -->
+        <div id="page-products" class="page">
+          <div class="page-actions">
+            <div class="search-bar">
+              <i class="fas fa-search"></i>
+              <input type="text" id="product-search" placeholder="製品を検索...">
+            </div>
+            <div class="filter-group">
+              <select id="product-category-filter">
+                <option value="">すべてのカテゴリー</option>
+                <option value="Sedan">Sedan</option>
+                <option value="SUV">SUV</option>
+                <option value="Truck">Truck</option>
+                <option value="Coupe">Coupe</option>
+                <option value="Hatchback">Hatchback</option>
+              </select>
+            </div>
+            <button id="create-product-btn" class="btn btn-primary" data-roles="admin,inventory">
+              <i class="fas fa-plus"></i> 新規製品
+            </button>
+          </div>
+          <div class="products-grid" id="products-grid"></div>
+        </div>
+
+        <!-- Customers Page -->
+        <div id="page-customers" class="page">
+          <div class="page-actions">
+            <div class="search-bar">
+              <i class="fas fa-search"></i>
+              <input type="text" id="customer-search" placeholder="顧客を検索...">
+            </div>
+            <button id="create-customer-btn" class="btn btn-primary" data-roles="admin,sales">
+              <i class="fas fa-plus"></i> 新規顧客
+            </button>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>会社名</th>
+                    <th>住所</th>
+                    <th>連絡先</th>
+                    <th>メール</th>
+                    <th>電話番号</th>
+                    <th>ステータス</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="customers-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Suppliers Page -->
+        <div id="page-suppliers" class="page">
+          <div class="page-actions">
+            <div class="search-bar">
+              <i class="fas fa-search"></i>
+              <input type="text" id="supplier-search" placeholder="サプライヤーを検索...">
+            </div>
+            <button id="create-supplier-btn" class="btn btn-primary" data-roles="admin">
+              <i class="fas fa-plus"></i> 新規サプライヤー
+            </button>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>会社名</th>
+                    <th>住所</th>
+                    <th>連絡先</th>
+                    <th>メール</th>
+                    <th>電話番号</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="suppliers-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Overlay -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div id="modal" class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title"></h3>
+        <button class="modal-close" id="modal-close"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer" id="modal-footer"></div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
